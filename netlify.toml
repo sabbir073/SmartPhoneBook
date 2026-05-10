@@ -1,0 +1,40 @@
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# Dynamic contact routes: rewrite any id to the placeholder bundle.
+# Netlify serves real files first, so /contact/new/ etc. still work.
+[[redirects]]
+  from = "/contact/:id/edit"
+  to = "/contact/_/edit/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/contact/:id/history"
+  to = "/contact/_/history/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/contact/:id"
+  to = "/contact/_/index.html"
+  status = 200
+
+# SPA fallback for anything else
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
