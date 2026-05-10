@@ -19,11 +19,17 @@ export default function TermsPage() {
         <ul>
           <li>
             You are responsible for the contacts and notes you store. Treat
-            other people's information with care.
+            other people's information with care, especially when importing
+            from your device's address book.
           </li>
           <li>
-            Calls and texts initiated from the app go through your phone's
-            carrier — standard call rates apply.
+            Calls initiated from the app go through your phone's carrier —
+            standard call rates apply.
+          </li>
+          <li>
+            The WhatsApp button opens WhatsApp's own service. Use of
+            WhatsApp is governed by their terms — we have no control over
+            what happens once you leave the app.
           </li>
           <li>
             Keep your device secure. Anyone with access to your unlocked

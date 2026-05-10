@@ -55,7 +55,29 @@ export default function PrivacyPage() {
             install prompt when available, so you can add the app to your
             home screen.
           </li>
+          <li>
+            <strong>Contact picker (only when you tap "Pick from phone"):</strong>{" "}
+            on Android Chrome, the OS shows you a native picker where you
+            choose which contacts to share with {APP_NAME}. Only the
+            contacts you explicitly select are passed to the app, and they
+            are saved to your local IndexedDB. Nothing is sent over the
+            network.
+          </li>
+          <li>
+            <strong>vCard file reads (only when you import a .vcf):</strong>{" "}
+            the file you pick is parsed entirely in your browser. The file
+            never leaves your device.
+          </li>
         </ul>
+
+        <h2>Outbound links</h2>
+        <p>
+          Tapping <strong>Call</strong> hands the number to your phone's
+          dialer (your carrier handles the call — we don't see it). Tapping
+          <strong> WhatsApp</strong> opens <code>wa.me/&lt;number&gt;</code>{" "}
+          in WhatsApp. Once you leave {APP_NAME}, those services have their
+          own privacy policies — please review them separately.
+        </p>
 
         <h2>Your data, your control</h2>
         <p>

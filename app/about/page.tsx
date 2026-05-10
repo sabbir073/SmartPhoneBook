@@ -48,8 +48,10 @@ export default function AboutPage() {
         <ul>
           <li>Manage contacts with full details and free-form description.</li>
           <li>One-tap calling that opens your phone's native dialer.</li>
+          <li>One-tap WhatsApp chat to the same number.</li>
           <li>After every call, get a prompt to save what you talked about.</li>
-          <li>Browse a timeline of past calls per contact.</li>
+          <li>Browse a timeline of past calls per contact, grouped by person on the Recent screen.</li>
+          <li>Import contacts from your phone (native picker on Android Chrome) or from a vCard (.vcf) file — with selective per-contact checkboxes.</li>
           <li>Works fully offline once installed.</li>
           <li>JSON backup &amp; restore — no cloud, no account.</li>
         </ul>

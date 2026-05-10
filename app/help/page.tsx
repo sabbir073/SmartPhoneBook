@@ -25,6 +25,55 @@ export default function HelpPage() {
           either way.
         </p>
 
+        <h2>WhatsApp</h2>
+        <p>
+          Tap the green <strong>WhatsApp</strong> button next to Call to open
+          a WhatsApp chat with the same number. From inside WhatsApp you can
+          send a message or start a WhatsApp voice/video call. This works on
+          any device that has WhatsApp installed (or WhatsApp Web on
+          desktop).
+        </p>
+
+        <h2>Importing contacts from your phone</h2>
+        <p>
+          Open <strong>Settings → Import contacts</strong>. Two options:
+        </p>
+        <ul>
+          <li>
+            <strong>Pick from phone</strong> — opens your phone's native
+            contact picker (Android Chrome only). Tap to select the contacts
+            you want and tap Done. They're added immediately.
+          </li>
+          <li>
+            <strong>Import vCard file (.vcf)</strong> — works on every
+            platform. First export your contacts from your phone or Google
+            Contacts as a <code>.vcf</code> file, then pick that file. A
+            sheet opens listing every contact in the file with checkboxes —
+            tap <strong>All / None</strong> at the top, search to filter,
+            and tap <strong>Import (N)</strong> when ready.
+          </li>
+        </ul>
+        <p>
+          Both paths skip duplicates automatically — any contact whose mobile
+          number already exists in {APP_NAME} is left untouched.
+        </p>
+
+        <h2>How do I export contacts from my phone as a vCard?</h2>
+        <ul>
+          <li>
+            <strong>iPhone</strong>: open the Contacts app, select All
+            Contacts, tap Share, choose vCard.
+          </li>
+          <li>
+            <strong>Android</strong>: open Contacts → menu → Settings →
+            Export → save as .vcf.
+          </li>
+          <li>
+            <strong>Google Contacts (web)</strong>: contacts.google.com →
+            Export → format vCard → Export.
+          </li>
+        </ul>
+
         <h2>Where are my call notes?</h2>
         <p>
           The newest 3 appear on the contact's details page. Tap{" "}
@@ -40,6 +89,14 @@ export default function HelpPage() {
         <p>
           Use the search bar on the Contacts screen. It matches across name,
           mobile number, company and email.
+        </p>
+
+        <h2>Recent calls</h2>
+        <p>
+          The Recent tab groups calls by contact. If you've called Alex 12
+          times, you'll see one row labelled <strong>Alex (12)</strong> with
+          the time of the latest call and the latest note text. Tap to open
+          the full timeline.
         </p>
 
         <h2>Backup &amp; restore</h2>

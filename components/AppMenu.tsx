@@ -112,11 +112,13 @@ export function AppMenu() {
               <li key={item.label}>
                 <button
                   onClick={() => handle(item)}
-                  className="tap w-full flex items-center gap-3 px-5 py-3 text-left active:bg-black/[0.04] dark:active:bg-white/[0.05]"
+                  className="tap w-full flex items-center gap-3 px-5 py-2.5 text-left active:bg-black/[0.04] dark:active:bg-white/[0.05]"
                 >
                   <div
-                    className="rounded-full p-2 shrink-0"
+                    className="shrink-0 flex items-center justify-center rounded-xl"
                     style={{
+                      width: 36,
+                      height: 36,
                       background:
                         "color-mix(in oklab, var(--color-primary) 14%, transparent)",
                       color: "var(--color-primary)",
@@ -124,19 +126,27 @@ export function AppMenu() {
                   >
                     <Icon size={18} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium">{item.label}</div>
+                  <div className="flex-1 min-w-0 leading-tight">
+                    <div
+                      className="font-semibold truncate"
+                      style={{ fontSize: 15, color: "var(--color-text)" }}
+                    >
+                      {item.label}
+                    </div>
                     {item.subtitle && (
                       <div
-                        className="text-xs"
-                        style={{ color: "var(--color-text-muted)" }}
+                        className="truncate mt-0.5"
+                        style={{
+                          fontSize: 12,
+                          color: "var(--color-text-muted)",
+                        }}
                       >
                         {item.subtitle}
                       </div>
                     )}
                   </div>
                   <ChevronRight
-                    size={18}
+                    size={16}
                     style={{ color: "var(--color-text-muted)" }}
                   />
                 </button>
