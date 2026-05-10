@@ -131,13 +131,13 @@ export function ContactPickerSheet({ open, contacts, onCancel, onImport }: Props
               </button>
             </div>
 
-            {/* Search + select-all */}
+            {/* Search */}
             <div
-              className="flex items-center gap-2 px-3 py-2 border-b"
+              className="px-3 py-2 border-b"
               style={{ borderColor: "var(--color-border)" }}
             >
               <div
-                className="flex items-center gap-2 px-3 flex-1 rounded-full"
+                className="flex items-center gap-2 px-3 rounded-full"
                 style={{
                   background: "var(--color-surface-2)",
                   border: "1px solid var(--color-border)",
@@ -158,22 +158,56 @@ export function ContactPickerSheet({ open, contacts, onCancel, onImport }: Props
                   spellCheck={false}
                 />
               </div>
-              <button
-                onClick={toggleAll}
-                disabled={filtered.length === 0}
-                className="tap text-sm font-semibold px-3 py-1.5 rounded-full"
-                style={{
-                  color: "var(--color-primary)",
-                  background:
-                    "color-mix(in oklab, var(--color-primary) 10%, transparent)",
-                }}
-              >
-                {allFilteredSelected ? "None" : "All"}
-              </button>
             </div>
 
             {/* List */}
             <ul className="flex-1 overflow-y-auto">
+              {/* Sticky 'Select all' header row */}
+              <li
+                className="sticky top-0 z-10 border-b"
+                style={{
+                  background: "var(--color-surface)",
+                  borderColor: "var(--color-border)",
+                }}
+              >
+                <button
+                  onClick={toggleAll}
+                  disabled={filtered.length === 0}
+                  className="tap w-full flex items-center gap-3 px-4 py-3 text-left active:bg-black/[0.03] dark:active:bg-white/[0.04] disabled:opacity-50"
+                >
+                  <div
+                    className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                    style={{
+                      background: allFilteredSelected
+                        ? "var(--color-primary)"
+                        : "transparent",
+                      border: `2px solid ${
+                        allFilteredSelected
+                          ? "var(--color-primary)"
+                          : "var(--color-border)"
+                      }`,
+                    }}
+                    aria-hidden
+                  >
+                    {allFilteredSelected && (
+                      <Check size={14} color="#fff" strokeWidth={3} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="font-semibold"
+                      style={{ fontSize: 15, color: "var(--color-primary)" }}
+                    >
+                      {allFilteredSelected ? "Deselect all" : "Select all"}
+                      {query.trim() && filtered.length > 0
+                        ? ` (${filtered.length} matching)`
+                        : filtered.length > 0
+                          ? ` (${filtered.length})`
+                          : ""}
+                    </div>
+                  </div>
+                </button>
+              </li>
               {filtered.length === 0 ? (
                 <li
                   className="px-5 py-10 text-center text-sm"

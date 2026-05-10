@@ -28,10 +28,27 @@ export default function HelpPage() {
         <h2>WhatsApp</h2>
         <p>
           Tap the green <strong>WhatsApp</strong> button next to Call to open
-          a WhatsApp chat with the same number. From inside WhatsApp you can
-          send a message or start a WhatsApp voice/video call. This works on
-          any device that has WhatsApp installed (or WhatsApp Web on
-          desktop).
+          WhatsApp on the same contact. From inside WhatsApp you can send a
+          message or tap the call icon to start a WhatsApp voice or video
+          call. Works on any device with WhatsApp installed (or WhatsApp Web
+          on desktop).
+        </p>
+        <p>
+          When you come back to {APP_NAME} after a WhatsApp session, the
+          same notes sheet appears — so WhatsApp calls get logged in the
+          contact's timeline alongside regular phone calls.
+        </p>
+        <h2>Country code for WhatsApp</h2>
+        <p>
+          WhatsApp links require a number with country code. If a saved
+          mobile starts with a leading <code>0</code> (or no country code
+          at all), Smart Phonebook automatically adds your default country
+          code in front when opening WhatsApp. The contact's saved number
+          is never modified.
+        </p>
+        <p>
+          The default is <strong>+880 (Bangladesh)</strong>. Change it
+          anytime in <strong>Settings → WhatsApp → Default country code</strong>.
         </p>
 
         <h2>Importing contacts from your phone</h2>

@@ -1,4 +1,6 @@
 "use client";
+import { setPendingCall } from "@/lib/pendingCall";
+import { toWhatsAppNumber } from "@/lib/whatsapp";
 
 function WhatsAppIcon({ size = 22 }: { size?: number }) {
   return (
@@ -14,29 +16,34 @@ function WhatsAppIcon({ size = 22 }: { size?: number }) {
   );
 }
 
-function cleanForWa(num: string): string {
-  // wa.me wants digits only, no leading + or spaces
-  return num.replace(/[^\d]/g, "");
-}
-
-export function WhatsAppButton({ mobile }: { mobile: string }) {
+export function WhatsAppButton({
+  contactId,
+  mobile,
+}: {
+  contactId: string;
+  mobile: string;
+}) {
   const open = () => {
-    const num = cleanForWa(mobile);
+    const num = toWhatsAppNumber(mobile);
     if (!num) return;
-    // Universal link — opens app on mobile, web on desktop
-    window.open(`https://wa.me/${num}`, "_blank", "noopener");
+    // Same flow as Call: stash a pendingCall so when the user returns
+    // to the app, the notes sheet pops open and the WhatsApp call is
+    // logged in the same timeline as phone calls.
+    setPendingCall({ contactId, startedAt: Date.now() });
+    // Universal wa.me link — opens WhatsApp app on phone, WhatsApp Web on desktop.
+    // Use a same-tab navigation so the visibilitychange handler fires when
+    // the user comes back, identical to the dialer flow.
+    window.location.href = `https://wa.me/${num}`;
   };
 
   return (
     <button
       onClick={open}
-      className="tap flex items-center justify-center gap-2 rounded-full font-semibold text-white"
+      className="tap flex flex-1 items-center justify-center gap-2 rounded-full font-semibold text-white px-4"
       style={{
         background: "#25D366",
         boxShadow: "0 6px 18px rgba(37,211,102,0.35)",
         height: 56,
-        paddingLeft: 24,
-        paddingRight: 28,
       }}
       aria-label={`Open WhatsApp chat with ${mobile}`}
     >

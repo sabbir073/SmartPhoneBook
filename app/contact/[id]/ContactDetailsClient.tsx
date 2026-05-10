@@ -109,9 +109,9 @@ export default function ContactDetailsClient() {
         {contact.company && (
           <div className="text-sm opacity-90 -mt-2">{contact.company}</div>
         )}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-3 flex w-full max-w-xs gap-3">
           <CallButton contactId={contact.id} mobile={contact.mobile} />
-          <WhatsAppButton mobile={contact.mobile} />
+          <WhatsAppButton contactId={contact.id} mobile={contact.mobile} />
         </div>
       </section>
 

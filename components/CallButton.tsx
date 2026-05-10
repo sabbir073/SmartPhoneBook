@@ -18,13 +18,11 @@ export function CallButton({
   return (
     <button
       onClick={handleCall}
-      className="tap flex items-center justify-center gap-2 rounded-full font-semibold text-white"
+      className="tap flex flex-1 items-center justify-center gap-2 rounded-full font-semibold text-white px-4"
       style={{
         background: "var(--color-accent)",
         boxShadow: "0 6px 18px rgba(16,185,129,0.35)",
         height: 56,
-        paddingLeft: 28,
-        paddingRight: 32,
       }}
       aria-label={`Call ${mobile}`}
     >

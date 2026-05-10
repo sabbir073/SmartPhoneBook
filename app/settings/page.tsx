@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Download,
   Upload,
@@ -33,6 +33,10 @@ import {
   isContactPickerSupported,
   pickFromPhone,
 } from "@/lib/importContacts";
+import {
+  getWhatsAppCountryCode,
+  setWhatsAppCountryCode,
+} from "@/lib/whatsapp";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -45,6 +49,8 @@ export default function SettingsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickable, setPickable] = useState<ParsedContact[]>([]);
   const pickerSupported = isContactPickerSupported();
+  const [waCode, setWaCode] = useState("880");
+  useEffect(() => setWaCode(getWhatsAppCountryCode()), []);
 
   const contactCount = useLiveQuery(() => db.contacts.count(), []);
   const callCount = useLiveQuery(() => db.callLogs.count(), []);
@@ -176,6 +182,58 @@ export default function SettingsPage() {
           current={theme}
           onSelect={setTheme}
         />
+      </Section>
+
+      <Section title="WhatsApp">
+        <div
+          className="flex items-center gap-3 px-4 py-3 border-b last:border-b-0"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <div style={{ color: "var(--color-primary)" }}>
+            <Smartphone size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium" style={{ fontSize: 15 }}>
+              Default country code
+            </div>
+            <div
+              className="text-xs"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Added to numbers without one when opening WhatsApp.
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-1 rounded-full px-3 py-1.5"
+            style={{
+              background: "var(--color-surface-2)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <span
+              style={{
+                color: "var(--color-text-muted)",
+                fontWeight: 600,
+              }}
+            >
+              +
+            </span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              maxLength={4}
+              value={waCode}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                setWaCode(v);
+                setWhatsAppCountryCode(v);
+              }}
+              placeholder="880"
+              className="text-base font-semibold w-14 text-center"
+              style={{ color: "var(--color-text)" }}
+            />
+          </div>
+        </div>
       </Section>
 
       <Section title="Import contacts">
