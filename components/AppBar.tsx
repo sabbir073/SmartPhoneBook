@@ -2,15 +2,18 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { AppMenu } from "./AppMenu";
 
 export function AppBar({
   title,
   back = false,
   right,
+  showMenu = true,
 }: {
   title: string;
   back?: boolean;
   right?: ReactNode;
+  showMenu?: boolean;
 }) {
   const router = useRouter();
   return (
@@ -34,6 +37,7 @@ export function AppBar({
       )}
       <h1 className="flex-1 text-lg font-semibold truncate">{title}</h1>
       {right}
+      {showMenu && <AppMenu />}
     </header>
   );
 }

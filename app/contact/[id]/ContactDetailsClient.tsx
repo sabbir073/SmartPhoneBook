@@ -15,6 +15,7 @@ import {
 import { AppBar } from "@/components/AppBar";
 import { ContactAvatar } from "@/components/ContactAvatar";
 import { CallButton } from "@/components/CallButton";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CallLogTimeline } from "@/components/CallLogTimeline";
 import { ConfirmSheet } from "@/components/ConfirmSheet";
 import { useContact } from "@/hooks/useContact";
@@ -108,8 +109,9 @@ export default function ContactDetailsClient() {
         {contact.company && (
           <div className="text-sm opacity-90 -mt-2">{contact.company}</div>
         )}
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
           <CallButton contactId={contact.id} mobile={contact.mobile} />
+          <WhatsAppButton mobile={contact.mobile} />
         </div>
       </section>
 

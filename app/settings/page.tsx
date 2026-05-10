@@ -11,8 +11,11 @@ import {
   ShieldCheck,
   ShieldAlert,
   Smartphone,
+  ContactRound,
+  FileText,
 } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
+import { ContactPickerSheet } from "@/components/ContactPickerSheet";
 import { useTheme, type Theme } from "@/hooks/useTheme";
 import {
   exportAll,
@@ -24,14 +27,24 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { useStoragePersistence } from "@/hooks/useStoragePersistence";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { parseVCard, type ParsedContact } from "@/lib/vcard";
+import {
+  importParsedContacts,
+  isContactPickerSupported,
+  pickFromPhone,
+} from "@/lib/importContacts";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const fileInput = useRef<HTMLInputElement>(null);
+  const vcardInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(
     null,
   );
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickable, setPickable] = useState<ParsedContact[]>([]);
+  const pickerSupported = isContactPickerSupported();
 
   const contactCount = useLiveQuery(() => db.contacts.count(), []);
   const callCount = useLiveQuery(() => db.callLogs.count(), []);
@@ -63,6 +76,56 @@ export default function SettingsPage() {
       });
     } finally {
       setBusy(null);
+    }
+  };
+
+  const handlePickFromPhone = async () => {
+    setBusy("pick");
+    setMsg(null);
+    try {
+      const parsed = await pickFromPhone();
+      if (parsed.length === 0) {
+        setMsg({ kind: "ok", text: "No contacts selected." });
+        return;
+      }
+      const result = await importParsedContacts(parsed);
+      setMsg({
+        kind: "ok",
+        text: `Imported ${result.added} contact${result.added === 1 ? "" : "s"}${result.skipped ? `, skipped ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"}` : ""}.`,
+      });
+    } catch (e) {
+      setMsg({
+        kind: "err",
+        text: e instanceof Error ? e.message : "Failed to pick contacts",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleVCardFile = async (file: File) => {
+    setBusy("vcard");
+    setMsg(null);
+    try {
+      const text = await file.text();
+      const parsed = parseVCard(text);
+      if (parsed.length === 0) {
+        setMsg({
+          kind: "err",
+          text: "No contacts found in this file. Make sure it's a valid vCard (.vcf).",
+        });
+        return;
+      }
+      setPickable(parsed);
+      setPickerOpen(true);
+    } catch (e) {
+      setMsg({
+        kind: "err",
+        text: e instanceof Error ? e.message : "Could not read the file",
+      });
+    } finally {
+      setBusy(null);
+      if (vcardInput.current) vcardInput.current.value = "";
     }
   };
 
@@ -112,6 +175,37 @@ export default function SettingsPage() {
           value="system"
           current={theme}
           onSelect={setTheme}
+        />
+      </Section>
+
+      <Section title="Import contacts">
+        <Row
+          icon={<ContactRound size={20} />}
+          title="Pick from phone"
+          subtitle={
+            pickerSupported
+              ? "Use your phone's native contact picker (Android Chrome)."
+              : "Not supported here — use Chrome on Android, or import a vCard."
+          }
+          onClick={handlePickFromPhone}
+          disabled={!pickerSupported || busy === "pick"}
+        />
+        <Row
+          icon={<FileText size={20} />}
+          title="Import vCard file (.vcf)"
+          subtitle="From iPhone, Google Contacts, Outlook — pick which to import."
+          onClick={() => vcardInput.current?.click()}
+          disabled={busy === "vcard"}
+        />
+        <input
+          ref={vcardInput}
+          type="file"
+          accept=".vcf,text/vcard,text/x-vcard"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleVCardFile(f);
+          }}
         />
       </Section>
 
@@ -227,6 +321,29 @@ export default function SettingsPage() {
         Smart Phonebook is a public app. Nothing leaves your device unless you export
         a backup file.
       </p>
+
+      <ContactPickerSheet
+        open={pickerOpen}
+        contacts={pickable}
+        onCancel={() => setPickerOpen(false)}
+        onImport={async (selected) => {
+          try {
+            const result = await importParsedContacts(selected);
+            setMsg({
+              kind: "ok",
+              text: `Imported ${result.added} contact${result.added === 1 ? "" : "s"}${result.skipped ? `, skipped ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"}` : ""}.`,
+            });
+          } catch (e) {
+            setMsg({
+              kind: "err",
+              text: e instanceof Error ? e.message : "Import failed",
+            });
+          } finally {
+            setPickerOpen(false);
+            setPickable([]);
+          }
+        }}
+      />
     </>
   );
 }
