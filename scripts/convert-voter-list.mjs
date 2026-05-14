@@ -34,10 +34,12 @@ function norm(h) {
     .trim();
 }
 
+// Suffix appended to every name. Change to "" to disable, or tweak format.
+const NAME_SUFFIX = " (BASIS)";
+
 // Header aliases. First key in each array wins.
 const FIELD_ALIASES = {
   name: ["name", "first name", "fullname", "full name", "final name"],
-  basis: ["basis id", "basis"],
   mobile: ["phone", "mobile", "mobile number", "phone number", "contact", "contact number"],
   address: ["address", "addr"],
   company: ["company name", "company", "organisation", "organization", "org"],
@@ -117,14 +119,14 @@ async function main() {
     if (!row || row.every((cell) => cell === "")) continue;
 
     const baseName = clean(row[idx.name]);
-    const basis = idx.basis !== undefined ? clean(row[idx.basis]) : "";
-    const name = basis ? `${baseName} (${basis})` : baseName;
     const mobile = cleanMobile(row[idx.mobile]);
 
     if (!baseName) {
       skippedNoName++;
       continue;
     }
+
+    const name = NAME_SUFFIX ? `${baseName}${NAME_SUFFIX}` : baseName;
     if (!mobile) {
       // Drop rows without a phone number — they can't be called or messaged.
       skippedNoMobile++;

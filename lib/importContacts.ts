@@ -8,11 +8,14 @@ export type ImportResult = { added: number; skipped: number };
 
 /**
  * Dedup-aware bulk import.
- *  - Entries with a mobile number are deduplicated against existing rows
- *    (same normalized digits → skipped).
- *  - Entries without a mobile (the voter-list has 23 such rows) are
- *    deduplicated against existing rows by (name, company) — that's
- *    enough to avoid double-inserting the same person on a re-sync.
+ *
+ * Dedup key = `name + normalized mobile + company` (all lowercased).
+ * Consequences:
+ *  - Different people sharing a phone → both kept (different name).
+ *  - Same person, same phone, DIFFERENT company → both kept
+ *    (career history / multiple affiliations).
+ *  - Same name + same phone + same company → treated as the same record
+ *    and skipped on re-sync.
  */
 export async function importParsedContacts(
   parsed: ParsedContact[],
@@ -20,16 +23,16 @@ export async function importParsedContacts(
   if (parsed.length === 0) return { added: 0, skipped: 0 };
 
   const existing = await db.contacts.toArray();
-  // Dedup key = name + mobile, so different people sharing a phone are both kept,
-  // but re-syncing an identical entry won't duplicate it.
-  const seen = new Set(existing.map((c) => dedupKey(c.name, c.mobile)));
+  const seen = new Set(
+    existing.map((c) => dedupKey(c.name, c.mobile, c.company)),
+  );
 
   const now = Date.now();
   const toInsert: Contact[] = [];
   let skipped = 0;
 
   for (const p of parsed) {
-    const k = dedupKey(p.name, p.mobile);
+    const k = dedupKey(p.name, p.mobile, p.company);
     if (seen.has(k)) {
       skipped++;
       continue;
@@ -54,8 +57,14 @@ export async function importParsedContacts(
   return { added: toInsert.length, skipped };
 }
 
-function dedupKey(name: string, mobile: string): string {
-  return name.trim().toLowerCase() + "|" + normalizeMobile(mobile);
+function dedupKey(name: string, mobile: string, company?: string): string {
+  return (
+    name.trim().toLowerCase() +
+    "|" +
+    normalizeMobile(mobile) +
+    "|" +
+    (company ?? "").trim().toLowerCase()
+  );
 }
 
 function normalizeMobile(m: string): string {
