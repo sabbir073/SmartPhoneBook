@@ -92,7 +92,9 @@ export async function importBackup(
     throw new Error(`Unsupported backup version: ${data.version}`);
   }
   if (!Array.isArray(data.contacts) || !Array.isArray(data.callLogs)) {
-    throw new Error("Backup file is missing contacts or call logs.");
+    throw new Error(
+      "This looks like a contacts-sync file, not a full backup. Use Settings → Sync contacts → Sync now instead.",
+    );
   }
 
   return db.transaction("rw", db.contacts, db.callLogs, async () => {

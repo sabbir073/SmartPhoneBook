@@ -186,6 +186,22 @@ export default function SettingsPage() {
     setMsg(null);
     try {
       const data = await readJSONFile(file);
+      // Auto-detect: a contacts-sync file lands here too if the user
+      // picks the wrong button. Dispatch to the right handler.
+      const maybe = data as { type?: string } | null;
+      if (maybe && maybe.type === "contacts-sync") {
+        const result = await syncContactsFromJSON(data);
+        setLastSync(getLastSync());
+        const newPart =
+          result.added === 0
+            ? "Everything already up to date."
+            : `Added ${result.added} new contact${result.added === 1 ? "" : "s"}.`;
+        const skipPart = result.skipped
+          ? ` Skipped ${result.skipped} that already exist.`
+          : "";
+        setMsg({ kind: "ok", text: newPart + skipPart });
+        return;
+      }
       const result = await importBackup(data, "merge");
       setMsg({
         kind: "ok",
