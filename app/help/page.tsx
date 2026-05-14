@@ -116,6 +116,20 @@ export default function HelpPage() {
           the full timeline.
         </p>
 
+        <h2>Sync from a shared contacts file</h2>
+        <p>
+          If someone shares a Smart Phonebook <code>contacts-sync</code>{" "}
+          JSON with you (for example a community phonebook), go to{" "}
+          <strong>Settings → Sync contacts → Sync now</strong> and pick the
+          file.
+        </p>
+        <p>
+          Only <strong>new</strong> contacts are added — any phone number
+          you already have is left untouched. Tap Sync again later when an
+          updated JSON is shared, and only the newly added entries will
+          come in.
+        </p>
+
         <h2>Backup &amp; restore</h2>
         <p>
           Settings → <strong>Export to JSON</strong> downloads all your

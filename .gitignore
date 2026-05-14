@@ -102,3 +102,10 @@ $RECYCLE.BIN/
 *.bak
 *.tmp
 *.local
+
+# ─────────────────────────────────────────────────────────────
+# Generated contact-sync data (source-of-truth lives outside the repo)
+# ─────────────────────────────────────────────────────────────
+voter-contacts.json
+*-contacts-sync.json
+Voter_List*.xlsx

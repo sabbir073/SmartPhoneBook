@@ -13,6 +13,7 @@ import {
   Smartphone,
   ContactRound,
   FileText,
+  RefreshCw,
 } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
 import { ContactPickerSheet } from "@/components/ContactPickerSheet";
@@ -37,6 +38,11 @@ import {
   getWhatsAppCountryCode,
   setWhatsAppCountryCode,
 } from "@/lib/whatsapp";
+import {
+  syncContactsFromJSON,
+  getLastSync,
+} from "@/lib/syncContacts";
+import { formatRelative } from "@/lib/format";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -50,7 +56,15 @@ export default function SettingsPage() {
   const [pickable, setPickable] = useState<ParsedContact[]>([]);
   const pickerSupported = isContactPickerSupported();
   const [waCode, setWaCode] = useState("880");
-  useEffect(() => setWaCode(getWhatsAppCountryCode()), []);
+  const [lastSync, setLastSync] = useState<{
+    at: number | null;
+    totalInLastFile: number | null;
+  }>({ at: null, totalInLastFile: null });
+  const syncInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    setWaCode(getWhatsAppCountryCode());
+    setLastSync(getLastSync());
+  }, []);
 
   const contactCount = useLiveQuery(() => db.contacts.count(), []);
   const callCount = useLiveQuery(() => db.callLogs.count(), []);
@@ -106,6 +120,38 @@ export default function SettingsPage() {
       });
     } finally {
       setBusy(null);
+    }
+  };
+
+  const handleSyncFile = async (file: File) => {
+    setBusy("sync");
+    setMsg(null);
+    try {
+      const text = await file.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error("Could not parse the file as JSON.");
+      }
+      const result = await syncContactsFromJSON(parsed);
+      setLastSync(getLastSync());
+      const newPart =
+        result.added === 0
+          ? "Everything already up to date."
+          : `Added ${result.added} new contact${result.added === 1 ? "" : "s"}.`;
+      const skipPart = result.skipped
+        ? ` Skipped ${result.skipped} that already exist.`
+        : "";
+      setMsg({ kind: "ok", text: newPart + skipPart });
+    } catch (e) {
+      setMsg({
+        kind: "err",
+        text: e instanceof Error ? e.message : "Sync failed",
+      });
+    } finally {
+      setBusy(null);
+      if (syncInput.current) syncInput.current.value = "";
     }
   };
 
@@ -234,6 +280,30 @@ export default function SettingsPage() {
             />
           </div>
         </div>
+      </Section>
+
+      <Section title="Sync contacts">
+        <Row
+          icon={<RefreshCw size={20} />}
+          title="Sync now"
+          subtitle={
+            lastSync.at
+              ? `Last synced ${formatRelative(lastSync.at)}${lastSync.totalInLastFile ? ` · ${lastSync.totalInLastFile} in file` : ""}. Tap to pick a newer JSON.`
+              : "Pick a contacts JSON to import. Existing contacts (matched by phone) are skipped."
+          }
+          onClick={() => syncInput.current?.click()}
+          disabled={busy === "sync"}
+        />
+        <input
+          ref={syncInput}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleSyncFile(f);
+          }}
+        />
       </Section>
 
       <Section title="Import contacts">
