@@ -8,7 +8,8 @@
       "WebFetch(domain:serwist.pages.dev)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:www.npmjs.com)",
-      "Bash(npm view *)"
+      "Bash(npm view *)",
+      "Bash(grep -oE 'addEventListener\\\\\\(\"fetch\",[^,]{0,80}' out/sw.js)"
     ]
   }
 }
