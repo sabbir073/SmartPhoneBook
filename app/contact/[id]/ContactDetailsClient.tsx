@@ -109,10 +109,22 @@ export default function ContactDetailsClient() {
         {contact.company && (
           <div className="text-sm opacity-90 -mt-2">{contact.company}</div>
         )}
-        <div className="mt-3 flex w-full max-w-xs gap-3">
-          <CallButton contactId={contact.id} mobile={contact.mobile} />
-          <WhatsAppButton contactId={contact.id} mobile={contact.mobile} />
-        </div>
+        {contact.mobile ? (
+          <div className="mt-3 flex w-full max-w-xs gap-3">
+            <CallButton contactId={contact.id} mobile={contact.mobile} />
+            <WhatsAppButton contactId={contact.id} mobile={contact.mobile} />
+          </div>
+        ) : (
+          <div
+            className="mt-3 text-xs px-3 py-1.5 rounded-full"
+            style={{
+              background: "rgba(255,255,255,0.18)",
+              color: "rgba(255,255,255,0.95)",
+            }}
+          >
+            No phone number — tap the pencil to add one.
+          </div>
+        )}
       </section>
 
       <section

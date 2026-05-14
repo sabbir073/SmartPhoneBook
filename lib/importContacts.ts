@@ -6,25 +6,48 @@ import type { ParsedContact } from "./vcard";
 
 export type ImportResult = { added: number; skipped: number };
 
-/** Dedup-aware bulk import. Skips parsed entries whose mobile already exists. */
+/**
+ * Dedup-aware bulk import.
+ *  - Entries with a mobile number are deduplicated against existing rows
+ *    (same normalized digits → skipped).
+ *  - Entries without a mobile (the voter-list has 23 such rows) are
+ *    deduplicated against existing rows by (name, company) — that's
+ *    enough to avoid double-inserting the same person on a re-sync.
+ */
 export async function importParsedContacts(
   parsed: ParsedContact[],
 ): Promise<ImportResult> {
   if (parsed.length === 0) return { added: 0, skipped: 0 };
 
   const existing = await db.contacts.toArray();
-  const seen = new Set(existing.map((c) => normalizeMobile(c.mobile)));
+  const seenMobiles = new Set<string>();
+  const seenNoPhone = new Set<string>();
+  for (const c of existing) {
+    const k = normalizeMobile(c.mobile);
+    if (k) seenMobiles.add(k);
+    else seenNoPhone.add(noPhoneKey(c.name, c.company));
+  }
+
   const now = Date.now();
   const toInsert: Contact[] = [];
   let skipped = 0;
 
   for (const p of parsed) {
-    const key = normalizeMobile(p.mobile);
-    if (!key || seen.has(key)) {
-      skipped++;
-      continue;
+    const mobileKey = normalizeMobile(p.mobile);
+    if (mobileKey) {
+      if (seenMobiles.has(mobileKey)) {
+        skipped++;
+        continue;
+      }
+      seenMobiles.add(mobileKey);
+    } else {
+      const k = noPhoneKey(p.name, p.company);
+      if (seenNoPhone.has(k)) {
+        skipped++;
+        continue;
+      }
+      seenNoPhone.add(k);
     }
-    seen.add(key);
     toInsert.push({
       id: uid(),
       name: p.name,
@@ -42,6 +65,12 @@ export async function importParsedContacts(
 
   if (toInsert.length) await db.contacts.bulkAdd(toInsert);
   return { added: toInsert.length, skipped };
+}
+
+function noPhoneKey(name: string, company?: string): string {
+  return (
+    name.trim().toLowerCase() + "" + (company ?? "").trim().toLowerCase()
+  );
 }
 
 function normalizeMobile(m: string): string {

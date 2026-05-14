@@ -67,7 +67,9 @@ export function ContactList({ contacts }: { contacts: Contact[] }) {
                       className="text-sm truncate"
                       style={{ color: "var(--color-text-muted)" }}
                     >
-                      {c.mobile}
+                      {c.mobile || (
+                        <span style={{ fontStyle: "italic" }}>No phone</span>
+                      )}
                       {c.company ? ` · ${c.company}` : ""}
                     </div>
                   </div>

@@ -36,7 +36,8 @@ function norm(h) {
 
 // Header aliases. First key in each array wins.
 const FIELD_ALIASES = {
-  name: ["final name", "fullname", "full name", "name"],
+  name: ["name", "first name", "fullname", "full name", "final name"],
+  basis: ["basis id", "basis"],
   mobile: ["phone", "mobile", "mobile number", "phone number", "contact", "contact number"],
   address: ["address", "addr"],
   company: ["company name", "company", "organisation", "organization", "org"],
@@ -45,9 +46,12 @@ const FIELD_ALIASES = {
 };
 
 function buildHeaderIndex(headers) {
+  // Keep the FIRST occurrence of each normalized header (the Voter List
+  // has two "Name" columns and the first one is the desired source).
   const lookup = {};
   headers.forEach((h, i) => {
-    lookup[norm(h)] = i;
+    const k = norm(h);
+    if (k && !(k in lookup)) lookup[k] = i;
   });
   const idx = {};
   for (const [target, aliases] of Object.entries(FIELD_ALIASES)) {
@@ -102,33 +106,33 @@ async function main() {
     );
   }
 
-  const seenMobiles = new Set();
   const out = [];
   let skippedNoName = 0;
-  let skippedNoMobile = 0;
-  let skippedDupe = 0;
+  let withoutMobile = 0;
+  let dupePhonesInSource = 0;
+  const seenMobiles = new Set();
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
     if (!row || row.every((cell) => cell === "")) continue;
 
-    const name = clean(row[idx.name]);
+    const baseName = clean(row[idx.name]);
+    const basis = idx.basis !== undefined ? clean(row[idx.basis]) : "";
+    const name = basis ? `${baseName} (${basis})` : baseName;
     const mobile = cleanMobile(row[idx.mobile]);
 
-    if (!name) {
+    if (!baseName) {
+      // Genuinely empty row in the spreadsheet — skip silently.
       skippedNoName++;
       continue;
     }
-    if (!mobile) {
-      skippedNoMobile++;
-      continue;
+
+    if (!mobile) withoutMobile++;
+    if (mobile) {
+      const dedupKey = mobile.replace(/\D/g, "");
+      if (seenMobiles.has(dedupKey)) dupePhonesInSource++;
+      seenMobiles.add(dedupKey);
     }
-    const dedupKey = mobile.replace(/\D/g, "");
-    if (seenMobiles.has(dedupKey)) {
-      skippedDupe++;
-      continue;
-    }
-    seenMobiles.add(dedupKey);
 
     const contact = { name, mobile };
     if (idx.address !== undefined) {
@@ -166,9 +170,9 @@ async function main() {
   const size = (await readFile(outputPath)).length;
   console.log("");
   console.log(`[convert] wrote ${out.length} contacts → ${OUT} (${(size / 1024).toFixed(1)} KB)`);
-  console.log(`[convert]   - skipped (no name): ${skippedNoName}`);
-  console.log(`[convert]   - skipped (no phone): ${skippedNoMobile}`);
-  console.log(`[convert]   - skipped (duplicate phone): ${skippedDupe}`);
+  console.log(`[convert]   - empty rows skipped: ${skippedNoName}`);
+  console.log(`[convert]   - included without phone: ${withoutMobile}`);
+  console.log(`[convert]   - duplicate phones in source (kept all): ${dupePhonesInSource}`);
 }
 
 main().catch((e) => {

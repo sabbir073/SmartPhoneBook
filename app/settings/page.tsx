@@ -14,9 +14,11 @@ import {
   ContactRound,
   FileText,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { AppBar } from "@/components/AppBar";
 import { ContactPickerSheet } from "@/components/ContactPickerSheet";
+import { ConfirmSheet } from "@/components/ConfirmSheet";
 import { useTheme, type Theme } from "@/hooks/useTheme";
 import {
   exportAll,
@@ -55,6 +57,7 @@ export default function SettingsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickable, setPickable] = useState<ParsedContact[]>([]);
   const pickerSupported = isContactPickerSupported();
+  const [confirmReset, setConfirmReset] = useState(false);
   const [waCode, setWaCode] = useState("880");
   const [lastSync, setLastSync] = useState<{
     at: number | null;
@@ -117,6 +120,31 @@ export default function SettingsPage() {
       setMsg({
         kind: "err",
         text: e instanceof Error ? e.message : "Failed to pick contacts",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setBusy("reset");
+    setMsg(null);
+    try {
+      await db.transaction("rw", db.contacts, db.callLogs, async () => {
+        await db.contacts.clear();
+        await db.callLogs.clear();
+      });
+      localStorage.removeItem("smart-phonebook:lastSyncedAt");
+      localStorage.removeItem("smart-phonebook:lastSyncedCount");
+      setLastSync({ at: null, totalInLastFile: null });
+      setMsg({
+        kind: "ok",
+        text: "All contacts and call notes deleted. You can now import fresh data.",
+      });
+    } catch (e) {
+      setMsg({
+        kind: "err",
+        text: e instanceof Error ? e.message : "Could not clear data",
       });
     } finally {
       setBusy(null);
@@ -458,6 +486,17 @@ export default function SettingsPage() {
         />
       </Section>
 
+      <Section title="Danger zone">
+        <Row
+          icon={<Trash2 size={20} />}
+          title="Clear all data"
+          subtitle="Permanently delete every contact and call note from this device."
+          onClick={() => setConfirmReset(true)}
+          disabled={busy === "reset"}
+          danger
+        />
+      </Section>
+
       <p
         className="text-center text-xs px-6 py-6"
         style={{ color: "var(--color-text-muted)" }}
@@ -465,6 +504,15 @@ export default function SettingsPage() {
         Smart Phonebook is a public app. Nothing leaves your device unless you export
         a backup file.
       </p>
+
+      <ConfirmSheet
+        open={confirmReset}
+        title="Delete everything?"
+        message="This will permanently erase every contact and every call note from this device. This action cannot be undone. Export a backup first if you want to keep a copy."
+        confirmLabel="Delete all"
+        onConfirm={handleClearAll}
+        onClose={() => setConfirmReset(false)}
+      />
 
       <ContactPickerSheet
         open={pickerOpen}
@@ -538,13 +586,16 @@ function Row({
   subtitle,
   onClick,
   disabled,
+  danger,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
   onClick: () => void;
   disabled?: boolean;
+  danger?: boolean;
 }) {
+  const accent = danger ? "var(--color-danger)" : "var(--color-primary)";
   return (
     <button
       onClick={onClick}
@@ -552,9 +603,11 @@ function Row({
       className="tap w-full flex items-center gap-3 px-4 py-3 text-left border-b last:border-b-0 disabled:opacity-60"
       style={{ borderColor: "var(--color-border)" }}
     >
-      <div style={{ color: "var(--color-primary)" }}>{icon}</div>
+      <div style={{ color: accent }}>{icon}</div>
       <div className="flex-1 min-w-0">
-        <div className="font-medium">{title}</div>
+        <div className="font-medium" style={danger ? { color: accent } : undefined}>
+          {title}
+        </div>
         {subtitle && (
           <div
             className="text-xs"

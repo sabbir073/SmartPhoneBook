@@ -96,7 +96,6 @@ export function ContactForm({ initial, submitLabel, onSubmit, onCancel }: Props)
     e.preventDefault();
     setError(null);
     if (!name.trim()) return setError("Name is required");
-    if (!mobile.trim()) return setError("Mobile number is required");
     setSaving(true);
     try {
       await onSubmit({
@@ -124,7 +123,6 @@ export function ContactForm({ initial, submitLabel, onSubmit, onCancel }: Props)
         <Field
           icon={Phone}
           label="Mobile number"
-          required
           type="tel"
           inputMode="tel"
           value={mobile}
