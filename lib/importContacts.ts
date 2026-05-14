@@ -20,34 +20,21 @@ export async function importParsedContacts(
   if (parsed.length === 0) return { added: 0, skipped: 0 };
 
   const existing = await db.contacts.toArray();
-  const seenMobiles = new Set<string>();
-  const seenNoPhone = new Set<string>();
-  for (const c of existing) {
-    const k = normalizeMobile(c.mobile);
-    if (k) seenMobiles.add(k);
-    else seenNoPhone.add(noPhoneKey(c.name, c.company));
-  }
+  // Dedup key = name + mobile, so different people sharing a phone are both kept,
+  // but re-syncing an identical entry won't duplicate it.
+  const seen = new Set(existing.map((c) => dedupKey(c.name, c.mobile)));
 
   const now = Date.now();
   const toInsert: Contact[] = [];
   let skipped = 0;
 
   for (const p of parsed) {
-    const mobileKey = normalizeMobile(p.mobile);
-    if (mobileKey) {
-      if (seenMobiles.has(mobileKey)) {
-        skipped++;
-        continue;
-      }
-      seenMobiles.add(mobileKey);
-    } else {
-      const k = noPhoneKey(p.name, p.company);
-      if (seenNoPhone.has(k)) {
-        skipped++;
-        continue;
-      }
-      seenNoPhone.add(k);
+    const k = dedupKey(p.name, p.mobile);
+    if (seen.has(k)) {
+      skipped++;
+      continue;
     }
+    seen.add(k);
     toInsert.push({
       id: uid(),
       name: p.name,
@@ -67,10 +54,8 @@ export async function importParsedContacts(
   return { added: toInsert.length, skipped };
 }
 
-function noPhoneKey(name: string, company?: string): string {
-  return (
-    name.trim().toLowerCase() + "" + (company ?? "").trim().toLowerCase()
-  );
+function dedupKey(name: string, mobile: string): string {
+  return name.trim().toLowerCase() + "|" + normalizeMobile(mobile);
 }
 
 function normalizeMobile(m: string): string {

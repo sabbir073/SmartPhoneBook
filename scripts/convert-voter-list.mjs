@@ -108,7 +108,7 @@ async function main() {
 
   const out = [];
   let skippedNoName = 0;
-  let withoutMobile = 0;
+  let skippedNoMobile = 0;
   let dupePhonesInSource = 0;
   const seenMobiles = new Set();
 
@@ -122,17 +122,18 @@ async function main() {
     const mobile = cleanMobile(row[idx.mobile]);
 
     if (!baseName) {
-      // Genuinely empty row in the spreadsheet — skip silently.
       skippedNoName++;
       continue;
     }
-
-    if (!mobile) withoutMobile++;
-    if (mobile) {
-      const dedupKey = mobile.replace(/\D/g, "");
-      if (seenMobiles.has(dedupKey)) dupePhonesInSource++;
-      seenMobiles.add(dedupKey);
+    if (!mobile) {
+      // Drop rows without a phone number — they can't be called or messaged.
+      skippedNoMobile++;
+      continue;
     }
+
+    const dedupKey = mobile.replace(/\D/g, "");
+    if (seenMobiles.has(dedupKey)) dupePhonesInSource++;
+    seenMobiles.add(dedupKey);
 
     const contact = { name, mobile };
     if (idx.address !== undefined) {
@@ -171,7 +172,7 @@ async function main() {
   console.log("");
   console.log(`[convert] wrote ${out.length} contacts → ${OUT} (${(size / 1024).toFixed(1)} KB)`);
   console.log(`[convert]   - empty rows skipped: ${skippedNoName}`);
-  console.log(`[convert]   - included without phone: ${withoutMobile}`);
+  console.log(`[convert]   - skipped (no phone): ${skippedNoMobile}`);
   console.log(`[convert]   - duplicate phones in source (kept all): ${dupePhonesInSource}`);
 }
 
