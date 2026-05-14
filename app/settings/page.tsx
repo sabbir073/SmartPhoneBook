@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Download,
   Upload,
@@ -48,6 +49,7 @@ import {
 import { formatRelative } from "@/lib/format";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const fileInput = useRef<HTMLInputElement>(null);
   const vcardInput = useRef<HTMLInputElement>(null);
@@ -454,6 +456,12 @@ export default function SettingsPage() {
             value="Use Chrome, Edge, or Safari to install this app."
           />
         )}
+        <Row
+          icon={<Info size={20} />}
+          title="PWA diagnostics"
+          subtitle="See exactly which install criteria pass or fail on this device."
+          onClick={() => router.push("/pwa-debug")}
+        />
       </Section>
 
       <Section title="About">

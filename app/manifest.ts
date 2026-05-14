@@ -2,27 +2,28 @@ import type { MetadataRoute } from "next";
 
 export const dynamic = "force-static";
 
-/**
- * Manifest mirrors the shape that DID install correctly at commit
- * 8674ed7. We keep that minimal core (name, start_url, scope, display,
- * theme, and the 3 essential icons) and only LAYER ON additions that
- * are documented as installability-safe:
- *   - more icon sizes (purely visual quality)
- *   - screenshots (only enriches the install dialog, never blocks it)
- *   - shortcuts (long-press menu only)
- *
- * Fields deliberately NOT added back yet because they regressed install
- * on Android Chrome in our testing:
- *   - id            (Chrome derives a stable id from start_url; setting
- *                    it explicitly can mismatch and break re-install)
- *   - display_override
- *   - file_handlers (POST-MVP — add back once install is solid)
- *   - launch_handler
- *   - handle_links
- *   - edge_side_panel
- */
+// Modern PWA manifest fields that Next.js's MetadataRoute.Manifest type
+// doesn't ship typings for yet but real browsers (Chromium 102+) support.
+type ModernManifestExtras = {
+  file_handlers?: Array<{
+    action: string;
+    accept: Record<string, string[]>;
+    icons?: Array<{ src: string; sizes: string }>;
+    launch_type?: "single-client" | "multiple-clients";
+  }>;
+  launch_handler?: {
+    client_mode?:
+      | "auto"
+      | "navigate-new"
+      | "navigate-existing"
+      | "focus-existing";
+  };
+  handle_links?: "auto" | "preferred" | "not-preferred";
+  edge_side_panel?: { preferred_width?: number };
+};
+
 export default function manifest(): MetadataRoute.Manifest {
-  return {
+  const m: MetadataRoute.Manifest & ModernManifestExtras = {
     name: "Smart Phonebook",
     short_name: "Smart Phonebook",
     description: "A fast, offline-first mobile phonebook with call notes.",
@@ -38,7 +39,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-256.png", sizes: "256x256", type: "image/png", purpose: "any" },
       { src: "/icons/icon-384.png", sizes: "384x384", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      // Maskable variants for Android adaptive icons (no Chrome chrome overlay).
+      // Maskable variants for Android adaptive icons.
       { src: "/icons/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
@@ -74,5 +75,29 @@ export default function manifest(): MetadataRoute.Manifest {
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },
     ],
+    // Register Smart Phonebook as the OS-level handler for vCard files.
+    // Chromium 102+. Tap a .vcf in Files / Mail / Drive → our app opens
+    // and the launchQueue API delivers the file to AppShell.
+    file_handlers: [
+      {
+        action: "/",
+        accept: {
+          "text/vcard": [".vcf"],
+          "text/x-vcard": [".vcf"],
+          "text/directory": [".vcf"],
+        },
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+        launch_type: "single-client",
+      },
+    ],
+    // Re-launching the home-screen icon focuses the existing window
+    // instead of stacking new ones. Chromium 102+.
+    launch_handler: { client_mode: "focus-existing" },
+    // When the user clicks a link to our origin from another app,
+    // open in the installed PWA. Chromium 96+.
+    handle_links: "preferred",
+    // Desktop Edge can host the app as a sidebar panel.
+    edge_side_panel: { preferred_width: 480 },
   };
+  return m;
 }

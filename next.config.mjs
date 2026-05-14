@@ -23,6 +23,7 @@ const APP_ROUTES = [
   "/privacy/",
   "/terms/",
   "/licenses/",
+  "/pwa-debug/",
 ];
 
 const withSerwist = withSerwistInit({

@@ -8,15 +8,19 @@ import { NotesBottomSheet } from "./NotesBottomSheet";
 import { InstallBanner } from "./InstallBanner";
 import { InsecureContextHint } from "./InsecureContextHint";
 import { SplashScreen } from "./SplashScreen";
+import { ContactPickerSheet } from "./ContactPickerSheet";
 import { usePendingCall } from "@/hooks/usePendingCall";
 import { useTheme } from "@/hooks/useTheme";
 import { useStoragePersistence } from "@/hooks/useStoragePersistence";
+import { useLaunchQueue } from "@/hooks/useLaunchQueue";
+import { importParsedContacts } from "@/lib/importContacts";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { pending, save, dismiss } = usePendingCall();
   useTheme();
   useStoragePersistence();
+  const launch = useLaunchQueue();
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -47,6 +51,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         pending={pending}
         onSave={save}
         onDismiss={dismiss}
+      />
+
+      {/* OS-level .vcf open: file_handlers in the manifest causes the OS
+          to launch us; launchQueue delivers the file; the standard picker
+          confirms what to import. */}
+      <ContactPickerSheet
+        open={!!launch.pending}
+        contacts={launch.pending ?? []}
+        onCancel={launch.clear}
+        onImport={async (selected) => {
+          try {
+            await importParsedContacts(selected);
+          } finally {
+            launch.clear();
+          }
+        }}
       />
     </div>
   );
