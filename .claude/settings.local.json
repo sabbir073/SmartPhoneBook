@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npm run *)",
+      "WebFetch(domain:web.dev)",
+      "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const m=JSON.parse\\(s\\);console.log\\('id:',m.id\\);console.log\\('start_url:',m.start_url\\);console.log\\('display:',m.display\\);console.log\\('display_override:',JSON.stringify\\(m.display_override\\)\\);console.log\\('prefer_related_applications:',m.prefer_related_applications\\);console.log\\('icons any:',m.icons.filter\\(i=>!i.purpose||i.purpose==='any'\\).map\\(i=>i.sizes\\).join\\(', '\\)\\);console.log\\('icons maskable:',m.icons.filter\\(i=>i.purpose==='maskable'\\).map\\(i=>i.sizes\\).join\\(', '\\)\\);console.log\\('screenshots:',m.screenshots?.length||0\\);console.log\\('shortcuts:',m.shortcuts?.length||0\\);}\\)\")",
+      "WebFetch(domain:serwist.pages.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm view *)"
     ]
   }
 }

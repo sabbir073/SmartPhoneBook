@@ -19,6 +19,7 @@ import {
 import { AppBar } from "@/components/AppBar";
 import { ContactPickerSheet } from "@/components/ContactPickerSheet";
 import { ConfirmSheet } from "@/components/ConfirmSheet";
+import { InstallInstructionsSheet } from "@/components/InstallInstructionsSheet";
 import { useTheme, type Theme } from "@/hooks/useTheme";
 import {
   exportAll,
@@ -58,6 +59,7 @@ export default function SettingsPage() {
   const [pickable, setPickable] = useState<ParsedContact[]>([]);
   const pickerSupported = isContactPickerSupported();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [installSheetOpen, setInstallSheetOpen] = useState(false);
   const [waCode, setWaCode] = useState("880");
   const [lastSync, setLastSync] = useState<{
     at: number | null;
@@ -427,16 +429,14 @@ export default function SettingsPage() {
       )}
 
       <Section title="App">
-        {!install.installed && (install.canInstall || install.iosInstructions) && (
+        {!install.installed && install.installable && (
           <Row
             icon={<Smartphone size={20} />}
             title="Install Smart Phonebook"
-            subtitle="Add to your home screen for offline access."
-            onClick={() => {
-              if (install.canInstall) void install.promptInstall();
-              else alert(
-                "On iPhone: tap the Share button in Safari, then 'Add to Home Screen'.",
-              );
+            subtitle={installRowSubtitle(install.platform, install.nativeReady)}
+            onClick={async () => {
+              const r = await install.promptInstall();
+              if (r === "needs-instructions") setInstallSheetOpen(true);
             }}
           />
         )}
@@ -445,6 +445,13 @@ export default function SettingsPage() {
             icon={<Smartphone size={18} />}
             label="Installed"
             value="Running as installed PWA"
+          />
+        )}
+        {!install.installed && !install.installable && (
+          <InfoRow
+            icon={<Smartphone size={18} />}
+            label="Install"
+            value="Use Chrome, Edge, or Safari to install this app."
           />
         )}
       </Section>
@@ -514,6 +521,12 @@ export default function SettingsPage() {
         onClose={() => setConfirmReset(false)}
       />
 
+      <InstallInstructionsSheet
+        open={installSheetOpen}
+        platform={install.platform}
+        onClose={() => setInstallSheetOpen(false)}
+      />
+
       <ContactPickerSheet
         open={pickerOpen}
         contacts={pickable}
@@ -538,6 +551,17 @@ export default function SettingsPage() {
       />
     </>
   );
+}
+
+function installRowSubtitle(
+  platform: import("@/lib/platform").InstallPlatform,
+  nativeReady: boolean,
+): string {
+  if (nativeReady) return "Tap to install — adds an app icon to your device.";
+  if (platform === "ios") return "iPhone: tap for the Share → Add to Home Screen steps.";
+  if (platform === "ipad-desktop") return "iPad: tap for Add to Home Screen steps.";
+  if (platform === "macos-safari") return "Mac Safari: tap for File → Add to Dock steps.";
+  return "Tap for install instructions for your browser.";
 }
 
 function formatBytes(n: number): string {

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const ICONS_DIR = join(ROOT, "public", "icons");
-const VERSION = "smart-phonebook-orange-v4";
+const VERSION = "smart-phonebook-orange-v5";
 
 function appIconSvg(size, { mask = false } = {}) {
   const radius = mask ? 0 : size * 0.22;
@@ -127,11 +127,29 @@ async function generate() {
   await mkdir(ICONS_DIR, { recursive: true });
 
   const targets = [
+    // Full PWA icon set — covers every size Chrome / Edge / Samsung Internet
+    // / Firefox / Safari look up. Larger sets reduce visual scaling artifacts
+    // on home screens, splash screens, share sheets, and task switchers.
+    { name: "icon-48.png", size: 48, opts: {} },
+    { name: "icon-72.png", size: 72, opts: {} },
+    { name: "icon-96.png", size: 96, opts: {} },
+    { name: "icon-128.png", size: 128, opts: {} },
+    { name: "icon-144.png", size: 144, opts: {} },
     { name: "icon-192.png", size: 192, opts: {} },
+    { name: "icon-256.png", size: 256, opts: {} },
+    { name: "icon-384.png", size: 384, opts: {} },
     { name: "icon-512.png", size: 512, opts: {} },
+    // Maskable variants at the two sizes Chrome looks for.
+    { name: "icon-maskable-192.png", size: 192, opts: { mask: true } },
     { name: "icon-maskable-512.png", size: 512, opts: { mask: true } },
-    { name: "apple-touch-icon.png", size: 180, opts: {} },
+    // Apple touch icons across the iOS/iPadOS/macOS device matrix.
+    { name: "apple-touch-icon.png", size: 180, opts: {} },      // iPhone (default)
+    { name: "apple-touch-icon-152.png", size: 152, opts: {} },  // iPad
+    { name: "apple-touch-icon-167.png", size: 167, opts: {} },  // iPad Pro
+    { name: "apple-touch-icon-120.png", size: 120, opts: {} },  // iPhone retina (legacy)
+    { name: "favicon-16.png", size: 16, opts: {} },
     { name: "favicon-32.png", size: 32, opts: {} },
+    { name: "favicon-96.png", size: 96, opts: {} },
   ];
 
   for (const t of targets) {

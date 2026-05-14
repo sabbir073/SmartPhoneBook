@@ -15,50 +15,32 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// IMPORTANT: explicit top-level fetch listener.
+// Chrome's PWA installability check statically parses the SW source for
+// `addEventListener('fetch', ...)` BEFORE the script runs. Serwist
+// attaches its fetch listener later (inside addEventListeners()), so
+// without this stub Chrome may decide there's no fetch handler and
+// downgrade the install prompt to "Add to Home Screen".
+//
+// This listener is a no-op — Serwist's listener registers afterwards
+// and handles the request. The empty handler is enough to pass the
+// installability heuristic.
+self.addEventListener("fetch", () => {
+  /* see comment above — Serwist handles the real fetch work */
+});
+
 const isNavigate = (req: Request) => req.mode === "navigate";
 const pathOf = (req: Request) => new URL(req.url).pathname;
 
 const PAGES_CACHE = "smart-phonebook-pages";
 
-// Every static-exported route in the app. We pre-fetch all of these
-// during SW install so the whole app works offline on the very first
-// launch — no need to visit a page once before it's cached.
-//
-// Keep this list in sync with new pages added under `app/`.
-const APP_ROUTES = [
-  "/",
-  "/recent/",
-  "/settings/",
-  "/contact/new/",
-  "/contact/_/",
-  "/contact/_/edit/",
-  "/contact/_/history/",
-  "/about/",
-  "/help/",
-  "/privacy/",
-  "/terms/",
-  "/licenses/",
-  "/manifest.webmanifest",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(PAGES_CACHE);
-      // Fetch in parallel; one failure must not abort the rest.
-      await Promise.all(
-        APP_ROUTES.map(async (route) => {
-          try {
-            const res = await fetch(route, { cache: "reload" });
-            if (res.ok) await cache.put(route, res.clone());
-          } catch {
-            /* offline at install time — that's fine, runtime cache will fill in later */
-          }
-        }),
-      );
-    })(),
-  );
-});
+// Routes are now precached at BUILD time via `additionalPrecacheEntries` in
+// next.config.mjs — see APP_ROUTES there. That's faster and more reliable
+// than fetching during the install event, because:
+//   1. The HTML is part of Serwist's precache manifest, so Chrome's
+//      installability check considers it cached.
+//   2. There's no install-time network race.
+//   3. Cache busting is handled per-revision.
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
