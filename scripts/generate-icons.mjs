@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 const ICONS_DIR = join(ROOT, "public", "icons");
-const VERSION = "smart-phonebook-orange-v3";
+const VERSION = "smart-phonebook-orange-v4";
 
 function appIconSvg(size, { mask = false } = {}) {
   const radius = mask ? 0 : size * 0.22;
@@ -66,6 +66,61 @@ function appIconSvg(size, { mask = false } = {}) {
 </svg>`;
 }
 
+// Stylised in-app screenshot for the install dialog. Not an actual screen
+// grab — a designed promo card that says "what this app is" so Chrome /
+// Edge / Samsung Internet show the rich Install sheet instead of the
+// "Add to Home Screen" fallback.
+function screenshotSvg(width, height, { orientation }) {
+  const isNarrow = orientation === "narrow";
+  const headerH = isNarrow ? 92 : 96;
+  const iconSize = isNarrow ? 96 : 120;
+  const titleY = isNarrow ? height * 0.4 : height * 0.42;
+
+  const cardCount = isNarrow ? 6 : 4;
+  const cardSpace = isNarrow ? 78 : 96;
+  const cardsStartY = isNarrow ? height * 0.55 : height * 0.6;
+  const cardW = width - 48;
+
+  const cards = Array.from({ length: cardCount }, (_, i) => {
+    const y = cardsStartY + i * cardSpace;
+    const colors = ["#fb923c", "#f97316", "#ea580c", "#dc2626", "#a855f7", "#3b82f6"];
+    return `
+      <g transform="translate(24 ${y})">
+        <rect rx="14" width="${cardW}" height="64" fill="white" />
+        <circle cx="36" cy="32" r="22" fill="${colors[i % colors.length]}" />
+        <rect x="72" y="18" width="${cardW * 0.45}" height="14" rx="4" fill="#1c1917" opacity="0.9"/>
+        <rect x="72" y="40" width="${cardW * 0.30}" height="10" rx="3" fill="#78716c"/>
+      </g>`;
+  }).join("");
+
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <defs>
+    <linearGradient id="header" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#ffedd5"/>
+    </linearGradient>
+  </defs>
+  <rect width="${width}" height="${height}" fill="url(#bg)"/>
+  <rect width="${width}" height="${headerH}" fill="url(#header)"/>
+  <text x="24" y="${headerH * 0.62}" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="${isNarrow ? 26 : 30}" font-weight="700" fill="white">Smart Phonebook</text>
+
+  <g transform="translate(${(width - iconSize) / 2} ${headerH + 36})">
+    ${appIconSvg(iconSize, {}).replace(/<\?xml[^>]*\?>/, "")}
+  </g>
+
+  <text x="${width / 2}" y="${titleY + iconSize * 0.4}" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="${isNarrow ? 24 : 30}" font-weight="700" fill="#1c1917">Your contacts. Offline.</text>
+  <text x="${width / 2}" y="${titleY + iconSize * 0.4 + (isNarrow ? 28 : 36)}" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="${isNarrow ? 14 : 18}" fill="#78716c">Call. WhatsApp. Notes — all on your device.</text>
+
+  ${cards}
+</svg>`;
+}
+
 async function generate() {
   // Always rebuild — bump VERSION above to force regeneration when design changes.
   await rm(ICONS_DIR, { recursive: true, force: true });
@@ -84,6 +139,20 @@ async function generate() {
     const svg = appIconSvg(t.size, t.opts);
     await sharp(Buffer.from(svg)).resize(t.size, t.size).png().toFile(out);
     console.log(`[icons] wrote ${t.name} (${VERSION})`);
+  }
+
+  // PWA manifest screenshots — required by Chrome / Edge / Samsung Internet
+  // to show the rich "Install Smart Phonebook" sheet rather than the
+  // "Add to Home Screen" fallback.
+  const shots = [
+    { name: "screenshot-narrow.png", w: 540, h: 1170, orientation: "narrow" },
+    { name: "screenshot-wide.png", w: 1280, h: 720, orientation: "wide" },
+  ];
+  for (const s of shots) {
+    const out = join(ICONS_DIR, s.name);
+    const svg = screenshotSvg(s.w, s.h, { orientation: s.orientation });
+    await sharp(Buffer.from(svg)).resize(s.w, s.h).png().toFile(out);
+    console.log(`[icons] wrote ${s.name} (${VERSION})`);
   }
 }
 
